@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuoteVibe — Daily Inspiration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Animated background blobs -->
+  <div class="bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Main App -->
+  <main class="app">
+
+    <!-- Header -->
+    <header class="header">
+      <span class="logo">✺ QuoteVibe</span>
+      <span class="tagline" id="tagline">loading vibe...</span>
+    </header>
+
+    <!-- Quote Card -->
+    <div class="card" id="card">
+      <div class="card-inner">
+
+        <div class="category-badge" id="categoryBadge">Wisdom</div>
+
+        <blockquote class="quote" id="quoteText">
+          <!-- Quote injected by JS -->
+        </blockquote>
+
+        <div class="author-block">
+          <div class="author-avatar" id="authorAvatar"></div>
+          <div class="author-info">
+            <span class="author-name" id="authorName">—</span>
+            <span class="author-meta" id="authorMeta"></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Decorative number -->
+      <span class="bg-number" id="bgNumber">01</span>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn-new" id="newQuoteBtn">
+        <span class="btn-icon">↻</span>
+        <span class="btn-label">New Quote</span>
+      </button>
+
+      <div class="counter-pill" id="counterPill">1 / 30</div>
+    </div>
+
+    <!-- Keyboard hint -->
+    <p class="kbd-hint">
+      Press <kbd>Space</kbd> or <kbd>→</kbd> for next
+    </p>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
