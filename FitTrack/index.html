@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitTrack — Your Personal Fitness Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── HEADER ─── -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="logo-mark">⚡</div>
+      <div>
+        <div class="logo-text">FITTRACK</div>
+        <div class="logo-sub" id="today-label">Loading...</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="streak-badge" class="streak-badge hidden">
+        🔥 0 day streak
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── NAVIGATION ─── -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchTab('dashboard', this)">
+      <span class="nav-icon">📊</span>
+      Dashboard
+    </button>
+    <button class="nav-btn" onclick="switchTab('log', this)">
+      <span class="nav-icon">➕</span>
+      Log
+    </button>
+    <button class="nav-btn" onclick="switchTab('history', this)">
+      <span class="nav-icon">📋</span>
+      History
+    </button>
+    <button class="nav-btn" onclick="switchTab('goals', this)">
+      <span class="nav-icon">🎯</span>
+      Goals
+    </button>
+  </nav>
+
+  <!-- ════════════════════════════════
+       SCREEN: DASHBOARD
+  ════════════════════════════════ -->
+  <section id="screen-dashboard" class="screen active">
+
+    <p class="section-label">Today at a glance</p>
+
+    <div class="metric-grid">
+      <div class="metric-card" style="--accent: #b5f23a;">
+        <span class="big-icon">👟</span>
+        <div class="metric-label">Steps</div>
+        <div class="metric-value" id="d-steps">0</div>
+        <div class="metric-pct" id="d-steps-pct"><span>0%</span> of daily goal</div>
+      </div>
+
+      <div class="metric-card" style="--accent: #f5a623;">
+        <span class="big-icon">🔥</span>
+        <div class="metric-label">Calories Burned</div>
+        <div class="metric-value" id="d-cal">0 <span class="metric-unit">kcal</span></div>
+        <div class="metric-pct" id="d-cal-pct"><span>0%</span> of daily goal</div>
+      </div>
+
+      <div class="metric-card" style="--accent: #38bdf8;">
+        <span class="big-icon">⏱</span>
+        <div class="metric-label">Workout Time</div>
+        <div class="metric-value" id="d-time">0 <span class="metric-unit">min</span></div>
+        <div class="metric-pct" id="d-time-pct"><span>0%</span> of daily goal</div>
+      </div>
+
+      <div class="metric-card" style="--accent: #34d399;">
+        <span class="big-icon">💧</span>
+        <div class="metric-label">Water Intake</div>
+        <div class="metric-value" id="d-water">0 <span class="metric-unit">ml</span></div>
+        <div class="metric-pct" id="d-water-pct"><span>0%</span> of daily goal</div>
+      </div>
+    </div>
+
+    <!-- Weekly stat band -->
+    <div class="stat-band">
+      <div class="stat-pill">
+        <div class="stat-pill-val" id="stat-week-cal">0</div>
+        <div class="stat-pill-label">Week Kcal</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-val" id="stat-week-time">0</div>
+        <div class="stat-pill-label">Week Mins</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-val" id="stat-active-days">0</div>
+        <div class="stat-pill-label">Active Days</div>
+      </div>
+    </div>
+
+    <!-- Progress bars -->
+    <div class="card">
+      <div class="card-title">Daily Progress</div>
+
+      <div class="progress-row">
+        <div class="progress-header">
+          <span class="progress-name">👟 Steps</span>
+          <span>
+            <span class="progress-nums" id="prog-steps-txt">0 / 10,000 steps</span>
+            <span class="progress-pct" style="color:#b5f23a;" id="prog-steps-pct">0%</span>
+          </span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="prog-steps" style="background:#b5f23a; width:0%;"></div>
+        </div>
+      </div>
+
+      <div class="progress-row">
+        <div class="progress-header">
+          <span class="progress-name">🔥 Calories</span>
+          <span>
+            <span class="progress-nums" id="prog-cal-txt">0 / 500 kcal</span>
+            <span class="progress-pct" style="color:#f5a623;" id="prog-cal-pct">0%</span>
+          </span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="prog-cal" style="background:#f5a623; width:0%;"></div>
+        </div>
+      </div>
+
+      <div class="progress-row">
+        <div class="progress-header">
+          <span class="progress-name">⏱ Workout Time</span>
+          <span>
+            <span class="progress-nums" id="prog-time-txt">0 / 60 min</span>
+            <span class="progress-pct" style="color:#38bdf8;" id="prog-time-pct">0%</span>
+          </span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="prog-time" style="background:#38bdf8; width:0%;"></div>
+        </div>
+      </div>
+
+      <div class="progress-row">
+        <div class="progress-header">
+          <span class="progress-name">💧 Water</span>
+          <span>
+            <span class="progress-nums" id="prog-water-txt">0 / 2,000 ml</span>
+            <span class="progress-pct" style="color:#34d399;" id="prog-water-pct">0%</span>
+          </span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="prog-water" style="background:#34d399; width:0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly chart -->
+    <div class="card">
+      <div class="card-title">Weekly Calories</div>
+      <div class="week-chart" id="week-bars"></div>
+      <div class="week-labels" id="week-labels"></div>
+    </div>
+
+    <!-- Streak -->
+    <div class="card">
+      <div class="card-title">Streak</div>
+      <div class="streak-dots" id="streak-dots"></div>
+      <p style="font-size:13px; color:var(--text-3); margin-top:12px; font-family:var(--font-mono);" id="streak-text"></p>
+    </div>
+
+  </section>
+
+  <!-- ════════════════════════════════
+       SCREEN: LOG ACTIVITY
+  ════════════════════════════════ -->
+  <section id="screen-log" class="screen">
+
+    <p class="section-label">What did you do today?</p>
+
+    <div class="card">
+
+      <!-- Activity type -->
+      <div class="form-group">
+        <label class="form-label">Activity Type</label>
+        <div class="type-grid">
+          <button class="type-btn selected" onclick="selectType(this,'Running','🏃')">
+            <span class="t-icon">🏃</span>Running
+          </button>
+          <button class="type-btn" onclick="selectType(this,'Cycling','🚴')">
+            <span class="t-icon">🚴</span>Cycling
+          </button>
+          <button class="type-btn" onclick="selectType(this,'Swimming','🏊')">
+            <span class="t-icon">🏊</span>Swimming
+          </button>
+          <button class="type-btn" onclick="selectType(this,'Strength','🏋️')">
+            <span class="t-icon">🏋️</span>Strength
+          </button>
+          <button class="type-btn" onclick="selectType(this,'Yoga','🧘')">
+            <span class="t-icon">🧘</span>Yoga
+          </button>
+          <button class="type-btn" onclick="selectType(this,'Walking','🚶')">
+            <span class="t-icon">🚶</span>Walking
+          </button>
+        </div>
+      </div>
+
+      <!-- Duration + Calories -->
+      <div class="form-group">
+        <div class="form-row-2">
+          <div>
+            <label class="form-label">Duration (min)</label>
+            <input class="form-input" type="number" id="inp-duration" placeholder="30" min="1" max="600">
+          </div>
+          <div>
+            <label class="form-label">Calories burned</label>
+            <input class="form-input" type="number" id="inp-calories" placeholder="250" min="0" max="9999">
+          </div>
+        </div>
+      </div>
+
+      <!-- Steps + Water -->
+      <div class="form-group">
+        <div class="form-row-2">
+          <div>
+            <label class="form-label">Steps (optional)</label>
+            <input class="form-input" type="number" id="inp-steps" placeholder="6000" min="0">
+          </div>
+          <div>
+            <label class="form-label">Water (ml)</label>
+            <input class="form-input" type="number" id="inp-water" placeholder="500" min="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label class="form-label">Notes (optional)</label>
+        <input class="form-input form-input-text" type="text" id="inp-notes" placeholder="e.g. Morning run along the river…">
+      </div>
+
+      <div class="msg msg-error" id="log-err"></div>
+      <button class="submit-btn" onclick="logActivity()">LOG ACTIVITY</button>
+      <div class="msg msg-success" id="log-ok">✓ Activity logged successfully!</div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════
+       SCREEN: HISTORY
+  ════════════════════════════════ -->
+  <section id="screen-history" class="screen">
+
+    <p class="section-label">All logged activities</p>
+    <div class="log-list" id="history-list"></div>
+
+  </section>
+
+  <!-- ════════════════════════════════
+       SCREEN: GOALS
+  ════════════════════════════════ -->
+  <section id="screen-goals" class="screen">
+
+    <p class="section-label">Set your daily targets</p>
+
+    <div class="card" style="padding-bottom:8px;">
+
+      <div class="goal-row">
+        <span class="goal-icon">👟</span>
+        <span class="goal-label">Steps target</span>
+        <input class="form-input" type="number" id="g-steps" placeholder="10000">
+      </div>
+
+      <div class="goal-row">
+        <span class="goal-icon">🔥</span>
+        <span class="goal-label">Calories target (kcal)</span>
+        <input class="form-input" type="number" id="g-cal" placeholder="500">
+      </div>
+
+      <div class="goal-row">
+        <span class="goal-icon">⏱</span>
+        <span class="goal-label">Workout time (min)</span>
+        <input class="form-input" type="number" id="g-time" placeholder="60">
+      </div>
+
+      <div class="goal-row">
+        <span class="goal-icon">💧</span>
+        <span class="goal-label">Water intake (ml)</span>
+        <input class="form-input" type="number" id="g-water" placeholder="2000">
+      </div>
+
+      <div style="padding: 8px 0 12px;">
+        <button class="submit-btn" onclick="saveGoals()">SAVE GOALS</button>
+        <div class="msg msg-success" id="goals-msg">✓ Goals updated!</div>
+      </div>
+
+    </div>
+
+    <p class="section-label" style="margin-top:1.5rem;">Workout minutes — this week</p>
+    <div class="card">
+      <div class="week-chart" id="week-bars-time"></div>
+      <div class="week-labels" id="week-labels-time"></div>
+    </div>
+
+  </section>
+
+</div><!-- /app -->
+
+<script src="app.js"></script>
+</body>
+</html>
