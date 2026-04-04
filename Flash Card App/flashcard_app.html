@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashMind AI – Study Cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --surface: rgba(10, 15, 30, 0.75);
+    --border: rgba(0, 212, 255, 0.2);
+    --radius: 20px;
+    --glow: 0 0 30px rgba(0,212,255,0.15);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; font-family: 'DM Sans', sans-serif; color: var(--text); overflow-x: hidden; position: relative; }
+
+  /* BACKGROUND */
+  .bg-image {
+    position: fixed; inset: 0; z-index: 0;
+    background: url('https://images.unsplash.com/photo-1518770660439-4636190af475?w=1920&q=80&fit=crop') center/cover no-repeat;
+  }
+  .bg-image::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(2,6,23,0.85) 0%, rgba(7,15,40,0.78) 50%, rgba(2,6,23,0.88) 100%);
+  }
+  .bg-image::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0,212,255,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(124,58,237,0.09) 0%, transparent 50%);
+  }
+  .scanlines {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+  }
+
+  /* CORNER ACCENTS */
+  .corner-accent { position: fixed; width: 100px; height: 100px; pointer-events: none; z-index: 1; }
+  .corner-accent::before, .corner-accent::after { content: ''; position: absolute; background: var(--accent); animation: cornerPulse 3s ease-in-out infinite; }
+  .corner-accent::before { width: 2px; height: 36px; }
+  .corner-accent::after  { width: 36px; height: 2px; }
+  .ca-tl { top:18px; left:18px; } .ca-tl::before{top:0;left:0;} .ca-tl::after{top:0;left:0;}
+  .ca-tr { top:18px; right:18px; } .ca-tr::before{top:0;right:0;} .ca-tr::after{top:0;right:0;}
+  .ca-bl { bottom:18px; left:18px; } .ca-bl::before{bottom:0;left:0;} .ca-bl::after{bottom:0;left:0;}
+  .ca-br { bottom:18px; right:18px; } .ca-br::before{bottom:0;right:0;} .ca-br::after{bottom:0;right:0;}
+  @keyframes cornerPulse { 0%,100%{opacity:0.25} 50%{opacity:0.7} }
+
+  /* PARTICLES */
+  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .particle { position: absolute; border-radius: 50%; animation: particleFloat linear infinite; opacity: 0; }
+  @keyframes particleFloat { 0%{transform:translateY(105vh);opacity:0} 10%{opacity:0.7} 90%{opacity:0.5} 100%{transform:translateY(-50px);opacity:0} }
+
+  /* LAYOUT */
+  .wrapper { position: relative; z-index: 2; width: 100%; max-width: 720px; margin: 0 auto; padding: 44px 20px 70px; }
+
+  /* HEADER */
+  header { text-align: center; margin-bottom: 36px; animation: fadeUp 0.6s ease both; }
+  .logo { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; letter-spacing: -1px; color: #fff; text-shadow: 0 0 40px rgba(0,212,255,0.4), 0 2px 4px rgba(0,0,0,0.6); }
+  .logo em { font-style: italic; background: linear-gradient(90deg,#00d4ff,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; filter:drop-shadow(0 0 10px rgba(0,212,255,0.5)); }
+  .ai-badge { display:inline-block; font-family:'DM Sans',sans-serif; font-size:0.58rem; background:linear-gradient(135deg,#00d4ff,#7c3aed); color:#fff !important; -webkit-text-fill-color:#fff !important; padding:3px 10px; border-radius:99px; vertical-align:middle; margin-left:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; box-shadow:0 0 16px rgba(0,212,255,0.4); }
+  .tagline { margin-top:10px; color:var(--accent); font-size:0.78rem; letter-spacing:3px; text-transform:uppercase; opacity:0.8; text-shadow:0 0 10px rgba(0,212,255,0.3); }
+
+  /* GLASS PANEL */
+  .glass {
+    background: var(--surface);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--glow), 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+  }
+  .glass::after {
+    content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,212,255,0.55), transparent);
+    border-radius: 99px; pointer-events: none;
+  }
+
+  /* GENERATOR */
+  .generator-box { padding: 28px; margin-bottom: 28px; animation: fadeUp 0.6s ease 0.1s both; }
+  .gen-title { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; color:#fff; margin-bottom:5px; }
+  .gen-title span { color: var(--accent); }
+  .gen-subtitle { font-size:0.83rem; color:var(--muted); margin-bottom:20px; line-height:1.5; }
+
+
+
+  .topic-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .topic-input { flex:1; min-width:200px; background:rgba(0,212,255,0.05); border:1px solid rgba(0,212,255,0.22); border-radius:13px; color:#fff; font-family:'DM Sans',sans-serif; font-size:0.93rem; padding:13px 16px; outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
+  .topic-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,212,255,0.1); }
+  .topic-input::placeholder { color:rgba(0,212,255,0.3); }
+
+  .count-select { background:rgba(0,212,255,0.05); border:1px solid rgba(0,212,255,0.22); border-radius:13px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:500; padding:13px 14px; outline:none; cursor:pointer; }
+  .count-select option { background:#0d1117; color:#e2e8f0; }
+
+  .generate-btn { padding:13px 28px; border-radius:13px; background:linear-gradient(135deg,#0088cc,#00d4ff); color:#000; font-family:'DM Sans',sans-serif; font-size:0.92rem; font-weight:700; border:none; cursor:pointer; box-shadow:0 4px 20px rgba(0,212,255,0.4); transition:all 0.2s; white-space:nowrap; letter-spacing:0.3px; }
+  .generate-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,212,255,0.55); }
+  .generate-btn:active { transform:scale(0.97); }
+  .generate-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .suggestions { margin-top:16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .suggestions-label { font-size:0.7rem; color:rgba(0,212,255,0.45); text-transform:uppercase; letter-spacing:2px; font-weight:600; }
+  .chip { padding:6px 14px; border-radius:99px; background:rgba(0,212,255,0.07); border:1px solid rgba(0,212,255,0.18); color:rgba(0,212,255,0.7); font-size:0.79rem; cursor:pointer; transition:all 0.15s; font-weight:500; }
+  .chip:hover { background:rgba(0,212,255,0.16); border-color:var(--accent); color:var(--accent); transform:translateY(-1px); box-shadow:0 0 12px rgba(0,212,255,0.2); }
+
+  /* ERROR */
+  .error-box { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:13px; padding:14px 18px; color:#fca5a5; font-size:0.86rem; margin-top:14px; display:none; line-height:1.5; }
+  .error-box.show { display:block; }
+
+  /* LOADING */
+  .loading-wrap { display:none; flex-direction:column; align-items:center; padding:50px 20px; gap:18px; }
+  .loading-wrap.show { display:flex; }
+  .spinner-ring { width:50px; height:50px; border-radius:50%; border:2px solid rgba(0,212,255,0.12); border-top-color:var(--accent); border-right-color:#7c3aed; animation:spin 0.9s linear infinite; box-shadow:0 0 20px rgba(0,212,255,0.25); }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loading-text { color:var(--muted); font-size:0.9rem; text-align:center; line-height:1.7; }
+  .loading-topic { color:var(--accent); font-weight:600; }
+
+  /* STUDY SECTION */
+  .study-section { display:none; }
+  .study-section.show { display:block; animation:fadeUp 0.45s ease both; }
+
+  .topic-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+  .topic-tag { background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.28); color:var(--accent); padding:7px 18px; border-radius:99px; font-size:0.82rem; font-weight:600; }
+  .header-right { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .score-badge { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.28); color:#f59e0b; padding:6px 14px; border-radius:99px; font-size:0.78rem; font-weight:600; }
+  .reset-btn { padding:7px 16px; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.82rem; cursor:pointer; transition:all 0.15s; font-weight:500; }
+  .reset-btn:hover { color:#fff; background:rgba(255,255,255,0.1); }
+
+  /* PROGRESS */
+  .progress-bar-wrap { display:flex; align-items:center; gap:14px; margin-bottom:22px; }
+  .progress-track { flex:1; height:4px; background:rgba(255,255,255,0.07); border-radius:99px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,#7c3aed,#00d4ff); border-radius:99px; transition:width 0.5s cubic-bezier(.4,0,.2,1); box-shadow:0 0 8px rgba(0,212,255,0.5); }
+  .progress-text { font-size:0.8rem; color:var(--accent); white-space:nowrap; min-width:55px; text-align:right; font-weight:600; }
+
+  /* CARD TYPE PILL */
+  .card-type-indicator { display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+  .type-pill { padding:5px 14px; border-radius:99px; font-size:0.7rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
+  .type-pill.flashcard { background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.28); color:var(--accent); }
+  .type-pill.mcq { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.28); color:#f59e0b; }
+
+  /* FLASHCARD */
+  .card-scene { perspective:1400px; margin-bottom:20px; height:300px; }
+  .card-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform 0.7s cubic-bezier(.4,0,.2,1); }
+  .card-inner.flipped { transform:rotateY(180deg); }
+  .card-face { position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:var(--radius); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; overflow:hidden; }
+  .card-face.front { background:rgba(6,12,30,0.82); backdrop-filter:blur(24px); border:1px solid rgba(0,212,255,0.22); box-shadow:0 0 40px rgba(0,212,255,0.1),0 20px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(0,212,255,0.08); }
+  .card-face.back  { transform:rotateY(180deg); background:rgba(10,6,30,0.82); backdrop-filter:blur(24px); border:1px solid rgba(124,58,237,0.28); box-shadow:0 0 40px rgba(124,58,237,0.12),0 20px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(124,58,237,0.08); }
+  .card-face.front::before { content:''; position:absolute; top:0; left:15%; right:15%; height:1px; background:linear-gradient(90deg,transparent,rgba(0,212,255,0.7),transparent); }
+  .card-face.back::before  { content:''; position:absolute; top:0; left:15%; right:15%; height:1px; background:linear-gradient(90deg,transparent,rgba(124,58,237,0.7),transparent); }
+  .card-label { font-size:0.65rem; text-transform:uppercase; letter-spacing:4px; color:var(--accent); margin-bottom:18px; font-weight:600; text-shadow:0 0 8px rgba(0,212,255,0.5); }
+  .card-face.back .card-label { color:#a78bfa; text-shadow:0 0 8px rgba(124,58,237,0.5); }
+  .card-content { font-family:'Playfair Display',serif; font-size:1.3rem; line-height:1.55; color:#f1f5f9; }
+  .card-face.back .card-content { font-style:italic; font-size:1.15rem; color:#e2d9ff; }
+  .card-number { position:absolute; bottom:14px; right:20px; font-size:0.65rem; color:rgba(0,212,255,0.35); font-weight:500; letter-spacing:1px; }
+
+  /* MCQ CARD */
+  .mcq-card { margin-bottom:20px; background:rgba(6,12,30,0.82); backdrop-filter:blur(24px); border:1px solid rgba(245,158,11,0.22); border-radius:var(--radius); padding:30px 26px 22px; box-shadow:0 0 28px rgba(245,158,11,0.07),0 20px 60px rgba(0,0,0,0.5); position:relative; display:none; }
+  .mcq-card::before { content:''; position:absolute; top:0; left:15%; right:15%; height:1px; background:linear-gradient(90deg,transparent,rgba(245,158,11,0.65),transparent); }
+  .mcq-card.show { display:block; animation:fadeUp 0.3s ease both; }
+  .mcq-label { font-size:0.65rem; text-transform:uppercase; letter-spacing:4px; color:#f59e0b; font-weight:600; text-align:center; margin-bottom:16px; }
+  .mcq-question { font-family:'Playfair Display',serif; font-size:1.15rem; line-height:1.55; color:#f1f5f9; margin-bottom:22px; text-align:center; }
+  .mcq-options { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .mcq-option { padding:12px 14px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.87rem; font-weight:500; cursor:pointer; transition:all 0.2s; text-align:left; display:flex; align-items:center; gap:10px; user-select:none; }
+  .mcq-option:hover:not(.disabled) { border-color:rgba(0,212,255,0.38); background:rgba(0,212,255,0.08); transform:translateY(-1px); }
+  .mcq-option.correct { border-color:#22c55e !important; background:rgba(34,197,94,0.12) !important; color:#86efac !important; }
+  .mcq-option.wrong   { border-color:#ef4444 !important; background:rgba(239,68,68,0.1)  !important; color:#fca5a5 !important; }
+  .mcq-option.disabled { cursor:not-allowed; pointer-events:none; }
+  .option-letter { width:26px; height:26px; border-radius:7px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:0.73rem; font-weight:700; color:var(--muted); flex-shrink:0; }
+  .mcq-option.correct .option-letter { background:rgba(34,197,94,0.2); border-color:#22c55e; color:#22c55e; }
+  .mcq-option.wrong   .option-letter { background:rgba(239,68,68,0.2); border-color:#ef4444; color:#ef4444; }
+  .mcq-feedback { text-align:center; padding:10px 16px; border-radius:10px; font-size:0.84rem; font-weight:600; display:none; line-height:1.5; }
+  .mcq-feedback.show-correct { display:block; background:rgba(34,197,94,0.1); color:#86efac; border:1px solid rgba(34,197,94,0.22); }
+  .mcq-feedback.show-wrong   { display:block; background:rgba(239,68,68,0.08); color:#fca5a5; border:1px solid rgba(239,68,68,0.18); }
+  .mcq-number { position:absolute; bottom:12px; right:18px; font-size:0.65rem; color:rgba(245,158,11,0.35); font-weight:500; }
+
+  /* BUTTONS */
+  .btn { padding:12px 28px; border-radius:13px; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; border:none; transition:all 0.2s; letter-spacing:0.3px; }
+  .btn:active { transform:scale(0.97); }
+  .btn-accent { background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; box-shadow:0 4px 20px rgba(245,158,11,0.35); }
+  .btn-accent:hover { box-shadow:0 8px 28px rgba(245,158,11,0.5); transform:translateY(-2px); }
+  .btn-ghost { background:rgba(255,255,255,0.05); color:var(--text); border:1px solid rgba(0,212,255,0.18); }
+  .btn-ghost:hover { background:rgba(0,212,255,0.1); border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+  .btn:disabled { opacity:0.25; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+  .btn-row { display:flex; gap:12px; justify-content:center; margin-bottom:16px; }
+  .nav-row { display:flex; gap:10px; align-items:center; justify-content:center; margin-bottom:28px; }
+
+  /* CARD LIST */
+  .divider { border:none; border-top:1px solid rgba(0,212,255,0.1); margin:24px 0; }
+  .section-title { font-size:0.7rem; text-transform:uppercase; letter-spacing:3.5px; color:rgba(0,212,255,0.4); margin-bottom:14px; font-weight:600; }
+  .card-list { display:flex; flex-direction:column; gap:8px; }
+  .card-item { background:rgba(6,12,30,0.62); backdrop-filter:blur(12px); border:1px solid rgba(0,212,255,0.09); border-radius:13px; padding:12px 16px; display:flex; align-items:center; gap:12px; transition:all 0.2s; cursor:pointer; }
+  .card-item:hover { border-color:rgba(0,212,255,0.32); transform:translateX(4px); }
+  .card-item.active-item { border-color:var(--accent); background:rgba(0,212,255,0.07); }
+  .card-item-num { font-size:0.7rem; color:var(--accent); font-weight:700; min-width:20px; }
+  .card-item-type { font-size:0.6rem; font-weight:700; padding:2px 7px; border-radius:99px; letter-spacing:1px; text-transform:uppercase; flex-shrink:0; }
+  .card-item-type.fc { background:rgba(0,212,255,0.1); color:var(--accent); border:1px solid rgba(0,212,255,0.18); }
+  .card-item-type.mc { background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.18); }
+  .card-item-q { flex:1; font-size:0.86rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-item-status { font-size:0.82rem; flex-shrink:0; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:rgba(6,12,30,0.94); backdrop-filter:blur(20px); border:1px solid rgba(0,212,255,0.28); color:var(--accent); padding:12px 24px; border-radius:99px; font-size:0.84rem; font-weight:500; box-shadow:0 8px 40px rgba(0,0,0,0.5); transition:transform 0.35s cubic-bezier(.4,0,.2,1),opacity 0.3s; opacity:0; z-index:100; white-space:nowrap; }
+  .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @media(max-width:520px) { .mcq-options{grid-template-columns:1fr;} .logo{font-size:2.2rem;} }
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-image"></div>
+<div class="scanlines"></div>
+<div class="corner-accent ca-tl"></div>
+<div class="corner-accent ca-tr"></div>
+<div class="corner-accent ca-bl"></div>
+<div class="corner-accent ca-br"></div>
+<div class="particles" id="particles"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">Flash<em>Mind</em><span class="ai-badge">AI</span></div>
+    <div class="tagline">Any Topic — Flashcards + Quiz Ready in Seconds</div>
+  </header>
+
+  <!-- GENERATOR BOX -->
+  <div class="generator-box glass">
+    <div class="gen-title">✦ <span>Generate Flashcards</span> from Any Topic</div>
+    <div class="gen-subtitle">Enter a topic and AI will instantly create study flashcards + MCQ questions for you</div>
+
+    <!-- TOPIC + COUNT + GENERATE -->
+    <div class="topic-row">
+      <input type="text" class="topic-input" id="topicInput"
+        placeholder="e.g. Linked List, Photosynthesis, World War 2…"
+        onkeydown="if(event.key==='Enter') generateCards()">
+      <select class="count-select" id="countSelect">
+        <option value="10">10 Cards</option>
+        <option value="15">15 Cards</option>
+        <option value="20">20 Cards</option>
+      </select>
+      <button class="generate-btn" id="generateBtn" onclick="generateCards()">✦ Generate</button>
+    </div>
+
+    <!-- QUICK CHIPS -->
+    <div class="suggestions">
+      <span class="suggestions-label">Try:</span>
+      <div class="chip" onclick="setTopic('Linked List')">Linked List</div>
+      <div class="chip" onclick="setTopic('Photosynthesis')">Photosynthesis</div>
+      <div class="chip" onclick="setTopic('French Revolution')">French Revolution</div>
+      <div class="chip" onclick="setTopic('Python Programming')">Python Programming</div>
+      <div class="chip" onclick="setTopic('Digestive System')">Digestive System</div>
+      <div class="chip" onclick="setTopic('Periodic Table')">Periodic Table</div>
+      <div class="chip" onclick="setTopic('Indian History')">Indian History</div>
+      <div class="chip" onclick="setTopic('Mathematics')">Mathematics</div>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="spinner-ring"></div>
+    <div class="loading-text">AI is generating cards for<br><span class="loading-topic" id="loadingTopic"></span></div>
+  </div>
+
+  <!-- STUDY SECTION -->
+  <div class="study-section" id="studySection">
+
+    <div class="topic-header">
+      <div class="topic-tag" id="topicTag">📚 Topic</div>
+      <div class="header-right">
+        <div class="score-badge" id="scoreBadge">Score: 0 / 0</div>
+        <button class="reset-btn" onclick="resetApp()">← New Topic</button>
+      </div>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">0 / 0</div>
+    </div>
+
+    <!-- Card type indicator -->
+    <div class="card-type-indicator">
+      <div class="type-pill flashcard" id="typePill">📖 Flashcard</div>
+    </div>
+
+    <!-- FLASHCARD -->
+    <div class="card-scene" id="cardScene">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face front">
+          <div class="card-label">Question</div>
+          <div class="card-content" id="cardQuestion">—</div>
+          <div class="card-number" id="cardNum"></div>
+        </div>
+        <div class="card-face back">
+          <div class="card-label">Answer</div>
+          <div class="card-content" id="cardAnswer">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row" id="flashBtns">
+      <button class="btn btn-accent" id="showBtn" onclick="flipCard()">Show Answer</button>
+    </div>
+
+    <!-- MCQ CARD -->
+    <div class="mcq-card" id="mcqCard">
+      <div class="mcq-label">🎯 Objective Question</div>
+      <div class="mcq-question" id="mcqQuestion">—</div>
+      <div class="mcq-options" id="mcqOptions"></div>
+      <div class="mcq-feedback" id="mcqFeedback"></div>
+      <div class="mcq-number" id="mcqNum"></div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="nav-row">
+      <button class="btn btn-ghost" id="prevBtn" onclick="prevCard()">← Previous</button>
+      <button class="btn btn-ghost" id="nextBtn" onclick="nextCard()">Next →</button>
+    </div>
+
+    <hr class="divider">
+    <div class="section-title">All Cards</div>
+    <div class="card-list" id="cardList"></div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Particles ─────────────────────────────────────────
+const pEl = document.getElementById('particles');
+const pColors = ['#00d4ff','#a78bfa','#f59e0b'];
+for (let i = 0; i < 28; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const s = 1.5 + Math.random() * 3;
+  p.style.cssText = `left:${Math.random()*100}%;width:${s}px;height:${s}px;background:${pColors[i%3]};animation-duration:${9+Math.random()*14}s;animation-delay:${Math.random()*12}s;`;
+  pEl.appendChild(p);
+}
+
+// ── State ─────────────────────────────────────────────
+let cards      = [];
+let current    = 0;
+let flipped    = false;
+let score      = 0;
+let mcqAnswered = {};   // { cardIndex: selectedOptionIndex }
+
+// ── Helpers ───────────────────────────────────────────
+function setTopic(t) {
+  document.getElementById('topicInput').value = t;
+  document.getElementById('topicInput').focus();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.innerHTML = msg;
+  b.classList.add('show');
+}
+
+function hideError() {
+  document.getElementById('errorBox').classList.remove('show');
+}
+
+// ── Extract JSON robustly ─────────────────────────────
+function extractJSON(text) {
+  // Strip markdown fences
+  let clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // Find first [ and last ]
+  const start = clean.indexOf('[');
+  const end   = clean.lastIndexOf(']');
+  if (start === -1 || end === -1) throw new Error('No JSON array found in response');
+  return JSON.parse(clean.slice(start, end + 1));
+}
+
+// ── Generate ──────────────────────────────────────────
+// 🔑 Your Groq API key — replace with your actual key from console.groq.com
+const GROQ_API_KEY = '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';
+
+async function generateCards() {
+  const apiKey = GROQ_API_KEY;
+  const topic  = document.getElementById('topicInput').value.trim();
+  const count  = parseInt(document.getElementById('countSelect').value);
+
+  // Validations
+  if (!apiKey || apiKey === 'YOUR_GROQ_API_KEY_HERE') { showError('⚠️ Please add your Groq API key inside the code. Open the HTML file and replace YOUR_GROQ_API_KEY_HERE with your key.'); return; }
+  if (!topic) { showToast('⚠️ Please enter a topic!'); document.getElementById('topicInput').focus(); return; }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  hideError();
+  document.getElementById('studySection').classList.remove('show');
+  document.getElementById('loadingWrap').classList.add('show');
+  document.getElementById('loadingTopic').textContent = `"${topic}"`;
+
+  const mcqCount = Math.max(2, Math.round(count * 0.4));
+  const fcCount  = count - mcqCount;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 2500,
+        temperature: 0.7,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a study card generator. You always respond with a valid JSON array only — no markdown, no backticks, no explanation. Just pure JSON.'
+          },
+          {
+            role: 'user',
+            content: `Generate a mixed set of study cards about: "${topic}".
+
+Create exactly:
+- ${fcCount} flashcard Q&A pairs (type "fc")
+- ${mcqCount} multiple choice questions with 4 options (type "mcq")
+
+Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
+
+Format:
+[
+  {"type":"fc","q":"Question?","a":"Clear answer in 1-2 sentences."},
+  {"type":"mcq","q":"Which of the following...?","options":["Option A","Option B","Option C","Option D"],"correct":0}
+]
+
+Important rules:
+- "correct" must be 0, 1, 2, or 3 (0-based index of correct option)
+- All 4 MCQ options must be plausible, not obviously wrong
+- Flashcard answers: concise, 1-3 sentences
+- Mix fc and mcq cards in the array (don't group them)
+- Cover varied subtopics of "${topic}"`
+          }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData?.error?.message || `HTTP ${res.status}: ${res.statusText}`;
+      throw new Error(msg);
+    }
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    // Groq uses OpenAI-compatible response format
+    const rawText = data?.choices?.[0]?.message?.content || '';
+    if (!rawText) throw new Error('Empty response from API');
+
+    const parsed = extractJSON(rawText);
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Response was not a valid card array');
+
+    // Validate each card
+    cards = parsed.filter(c => {
+      if (c.type === 'fc') return c.q && c.a;
+      if (c.type === 'mcq') return c.q && Array.isArray(c.options) && c.options.length === 4 && typeof c.correct === 'number';
+      return false;
+    });
+
+    if (cards.length === 0) throw new Error('No valid cards found in response. Try again.');
+
+    current     = 0;
+    flipped     = false;
+    score       = 0;
+    mcqAnswered = {};
+
+    document.getElementById('topicTag').textContent  = '📚 ' + topic;
+    document.getElementById('loadingWrap').classList.remove('show');
+    document.getElementById('studySection').classList.add('show');
+    updateScore();
+    render();
+
+    const fcTotal  = cards.filter(c => c.type === 'fc').length;
+    const mcqTotal = cards.filter(c => c.type === 'mcq').length;
+    showToast(`✅ ${fcTotal} flashcards + ${mcqTotal} MCQs ready!`);
+
+  } catch (err) {
+    document.getElementById('loadingWrap').classList.remove('show');
+    let msg = err.message || 'Unknown error';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      msg = 'Network error. Make sure you are connected to the internet and using Live Server (not file://).';
+    } else if (msg.includes('401') || msg.includes('authentication')) {
+      msg = 'Invalid Groq API key. Please check your key at console.groq.com';
+    } else if (msg.includes('429')) {
+      msg = 'Rate limit reached. Please wait a moment and try again.';
+    }
+    showError('⚠️ ' + msg);
+  }
+
+  btn.disabled = false;
+}
+
+// ── Reset ─────────────────────────────────────────────
+function resetApp() {
+  document.getElementById('studySection').classList.remove('show');
+  document.getElementById('topicInput').value = '';
+  hideError();
+  cards = []; score = 0; mcqAnswered = {};
+  document.getElementById('topicInput').focus();
+}
+
+// ── Render current card ───────────────────────────────
+function render() {
+  const total = cards.length;
+  document.getElementById('progressFill').style.width = ((current + 1) / total * 100) + '%';
+  document.getElementById('progressText').textContent  = `${current + 1} / ${total}`;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current >= total - 1;
+
+  const card = cards[current];
+  if (card.type === 'fc') renderFlashcard(card);
+  else                    renderMCQ(card);
+
+  renderList();
+}
+
+function renderFlashcard(card) {
+  document.getElementById('cardScene').style.display  = 'block';
+  document.getElementById('flashBtns').style.display  = 'flex';
+  document.getElementById('mcqCard').classList.remove('show');
+  document.getElementById('typePill').textContent     = '📖 Flashcard';
+  document.getElementById('typePill').className       = 'type-pill flashcard';
+  document.getElementById('cardQuestion').textContent = card.q;
+  document.getElementById('cardAnswer').textContent   = card.a;
+  document.getElementById('cardNum').textContent      = `${current + 1} of ${cards.length}`;
+  unflip();
+}
+
+function renderMCQ(card) {
+  document.getElementById('cardScene').style.display  = 'none';
+  document.getElementById('flashBtns').style.display  = 'none';
+  document.getElementById('mcqCard').classList.add('show');
+  document.getElementById('typePill').textContent     = '🎯 Objective MCQ';
+  document.getElementById('typePill').className       = 'type-pill mcq';
+  document.getElementById('mcqQuestion').textContent  = card.q;
+  document.getElementById('mcqNum').textContent       = `${current + 1} of ${cards.length}`;
+
+  const answered = mcqAnswered.hasOwnProperty(current);
+  const letters  = ['A', 'B', 'C', 'D'];
+
+  document.getElementById('mcqOptions').innerHTML = card.options.map((opt, i) => {
+    let cls = 'mcq-option';
+    if (answered) {
+      cls += ' disabled';
+      if (i === card.correct) cls += ' correct';
+      else if (i === mcqAnswered[current]) cls += ' wrong';
+    }
+    return `<div class="${cls}" onclick="answerMCQ(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <span>${escHtml(opt)}</span>
+    </div>`;
+  }).join('');
+
+  const fb = document.getElementById('mcqFeedback');
+  fb.className = 'mcq-feedback';
+  if (answered) {
+    const isCorrect = mcqAnswered[current] === card.correct;
+    fb.className    = 'mcq-feedback ' + (isCorrect ? 'show-correct' : 'show-wrong');
+    fb.textContent  = isCorrect
+      ? '✅ Correct! Well done.'
+      : `❌ Wrong answer. Correct: ${letters[card.correct]}. ${card.options[card.correct]}`;
+  }
+}
+
+function answerMCQ(selected) {
+  if (mcqAnswered.hasOwnProperty(current)) return;
+  mcqAnswered[current] = selected;
+  if (selected === cards[current].correct) { score++; updateScore(); }
+  renderMCQ(cards[current]);
+  renderList();
+}
+
+function updateScore() {
+  const totalMCQ = cards.filter(c => c.type === 'mcq').length;
+  document.getElementById('scoreBadge').textContent = `Score: ${score} / ${totalMCQ}`;
+}
+
+// ── Flashcard flip ────────────────────────────────────
+function unflip() {
+  flipped = false;
+  document.getElementById('cardInner').classList.remove('flipped');
+  document.getElementById('showBtn').textContent = 'Show Answer';
+}
+
+function flipCard() {
+  flipped = !flipped;
+  document.getElementById('cardInner').classList.toggle('flipped', flipped);
+  document.getElementById('showBtn').textContent = flipped ? 'Hide Answer' : 'Show Answer';
+}
+
+// ── Navigation ────────────────────────────────────────
+function prevCard() { if (current > 0) { current--; render(); } }
+function nextCard() { if (current < cards.length - 1) { current++; render(); } }
+
+function jumpTo(i) {
+  current = i;
+  render();
+  document.querySelector('.card-type-indicator').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Sidebar list ──────────────────────────────────────
+function renderList() {
+  document.getElementById('cardList').innerHTML = cards.map((c, i) => {
+    const isMCQ = c.type === 'mcq';
+    let status  = '';
+    if (isMCQ && mcqAnswered.hasOwnProperty(i)) {
+      status = mcqAnswered[i] === c.correct ? '✅' : '❌';
+    }
+    return `<div class="card-item ${i === current ? 'active-item' : ''}" onclick="jumpTo(${i})">
+      <div class="card-item-num">${i + 1}</div>
+      <div class="card-item-type ${isMCQ ? 'mc' : 'fc'}">${isMCQ ? 'MCQ' : 'Q&A'}</div>
+      <div class="card-item-q">${escHtml(c.q)}</div>
+      <div class="card-item-status">${status}</div>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
